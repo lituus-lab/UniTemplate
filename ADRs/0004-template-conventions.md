@@ -8,7 +8,7 @@
 
 ## Layout
 
-```
+```text
 UniTemplate.nimble          package + tasks
 config.nims                 arch-conditional build flags
 src/UniTemplate.nim         umbrella

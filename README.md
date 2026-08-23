@@ -8,7 +8,7 @@ and Python.
 
 ## Layout
 
-```
+```text
 src/UniTemplate.nim          umbrella module
 src/UniTemplate/fibonacci.nim  Nim core (NimContracts)
 src/UniTemplate/c_api.nim    C ABI
