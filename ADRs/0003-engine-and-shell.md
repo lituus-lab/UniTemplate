@@ -17,5 +17,9 @@
   to link, so the C test is the ABI drift detector. (`--header:X.h` auto-gen is
   not used.)
 - `--mm:arc`: deterministic memory model for foreign callers (no cycle
-  collector). `--noMain`: no `NimMain()` call needed from C.
+  collector). `--noMain`: Nim emits no `main()`, so nothing calls `NimMain()`
+  on its own — a shared library still gets one from DllMain or an ELF
+  constructor, a static one gets nothing at all. That is why every entry point
+  in `c_api.nim` opens with `ensureRuntime()`, and why the static builds pass
+  `-d:staticNoAutoInit` while the shared ones must not.
 - **Python binding**: Cython over the shared lib, RPATH `$ORIGIN`.

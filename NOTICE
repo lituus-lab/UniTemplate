@@ -15,5 +15,5 @@ limitations under the License.
 
 ----------------------------------------------------------------------------
 
-Bundles a pinned dependency on NimContracts (github.com/lbartoletti/NimContracts,
-branch fix/generic-proc-support), MIT-licensed.
+Depends on NimContracts (github.com/lbartoletti/NimContracts), MIT-licensed,
+tracked at its main branch HEAD.

@@ -91,12 +91,13 @@ callers expect — a precondition in Nim, a clamp in C, an exception in Python.
 `py/notebooks/quickstart.ipynb` runs these calls against an installed wheel and
 renders on GitHub directly.
 
-## Cloning this into an engine
+## Starting an engine from this
 
-Rename the tokens (`UniTemplate` → `UniFoo`, `unitemplate` → `unifoo`, `ut_` →
-the engine's prefix), replace `fibonacci.nim` with the domain modules, then
-rewrite this book for the domain. The generated reference lists the API; the
-book is where the domain gets explained.
+Press **Use this template** on GitHub, then rename the tokens — `UniTemplate` →
+`UniFoo`, `unitemplate` → `unifoo`, and the C prefix with them, since it is the
+library's own name in lower case. Replace `fibonacci.nim` with the domain
+modules, and rewrite this book for the domain: the generated reference lists the
+API, the book is where the domain gets explained.
 """
 
 nbSave

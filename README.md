@@ -2,9 +2,9 @@
 <!-- Copyright 2026 lituus-lab -->
 # UniTemplate
 
-Reference scaffold cloned to start each `lituus-lab` `Uni*` library. Private
-repo (not a public GitHub template). Hello-world: `fibonacci`, in Nim, C ABI,
-and Python.
+GitHub template repository for the `lituus-lab` `Uni*` libraries. Press **Use
+this template** and a new engine starts with the layout, the gates and the CI
+already in place. Hello-world: `fibonacci`, in Nim, C ABI, and Python.
 
 ## Layout
 
@@ -25,23 +25,43 @@ ADRs/                        0001 DAG, 0002 license, 0003 engine&shell, 0004 con
 
 ```bash
 nimble install -y
-nimble test           # Nim, debug (contracts active)
-nimble testRelease    # Nim, release (contracts compiled away)
-nimble testAll        # debug + release + C ABI
-nimble ctest          # C ABI: static lib + tests/c
-nimble cexample       # C demo
-nimble example        # Nim demo
-nimble pyTest         # Cython + pytest
-nimble coverage       # gcov + lcov -> coverage/
-nimble book           # nimib book -> book/index.html
-nimble docs           # book + API reference -> pages/
+nim c --hints:off -o:build/unigate tools/gate.nim   # the failure gate, once
+
+build/unigate test    # Nim, debug (contracts active), see below
+build/unigate testRelease    # Nim, release (contracts compiled away)
+build/unigate testAll        # debug + release + C ABI
+build/unigate ctest          # C ABI: static lib + tests/c
+build/unigate cexample       # C demo
+build/unigate example        # Nim demo
+build/unigate pyTest         # Cython + pytest
+build/unigate coverage       # gcov + lcov -> coverage/
+build/unigate book           # nimib book -> book/index.html
+build/unigate docs           # book + API reference -> pages/
+build/unigate canary         # must fail: proves the gate still works
 ```
+
+## Running a task
+
+Nimble 0.22 exits 0 even when an `exec` inside a task failed: the exception is
+printed, the task stops, and the process still reports success. `nimble test`
+coming back 0 therefore proves only that nimble ran. Every task here ends by
+writing its own success marker, and `tools/gate.nim` is what turns a missing
+marker into a non-zero exit.
+
+Run tasks through `build/unigate`, never bare, wherever the answer matters.
+`build/unigate canary` compiles a source that cannot compile and must come back
+non-zero; a CI job checks exactly that, because a gate nobody tests is a gate
+nobody can trust.
 
 ## CI
 
 `test`, `cabi` and `python` on ubuntu/macOS/Windows. `consume-cabi` and
 `consume-wheel` rebuild against the published artifacts on a machine without Nim,
-so what ships is what was tested. `coverage` and `docs` run on ubuntu.
+so what ships is what was tested. `coverage` and `docs` run on ubuntu. `canary`
+checks that the gate still rejects a broken build.
+
+`all-green` gathers every job's result and is the single check branch protection
+requires: a job that was skipped or cancelled cannot pass for one that ran.
 
 `dco` blocks PRs missing a `Signed-off-by` trailer; `commitizen` blocks PRs whose
 commits or title are not [Conventional Commits](https://www.conventionalcommits.org/)
@@ -50,24 +70,34 @@ commits or title are not [Conventional Commits](https://www.conventionalcommits.
 The same gates run locally with pre-commit: `pip install pre-commit && pre-commit install`
 (`CONTRIBUTING.md`).
 
-`docs` publishes to GitHub Pages only from a public repo — the template itself is
-private, so that deploy stays skipped here and turns itself on in the engines.
+`pages` deploys the built docs, and is opt-in through the `PUBLISH_PAGES`
+repository variable. It is off by default: across the family today every one of
+these deployments reports success while every site answers 404, and a job that
+is red forever teaches everyone to ignore red.
 
-## Clone map
+## After "Use this template"
 
-Clone, then rename tokens, then replace `fibonacci.nim` with the domain module(s).
+Rename the tokens, then replace `fibonacci.nim` with the domain module(s).
 
-| Template | Clone | Example |
+| Template | New engine | Example |
 |---|---|---|
-| `UniTemplate` | `UniFoo` | `UniAccurate`, `UniMath`, `UniGeom` |
-| `unitemplate` | `unifoo` | `uniaccurate`, `unimath`, `unigeom` |
-| `ut_` | `<short>_` | `ua_`, `um_`, `ulin_`, `ug_` |
-| `libUniTemplate` | `libUniFoo` | `libUniMusic` |
-| `UniTemplate.h` | `UniFoo.h` | `UniMusic.h` |
+| `UniTemplate` | `UniFoo` | `UniAccurate`, `UniMath` |
+| `unitemplate` | `unifoo` | `uniaccurate`, `unimath` |
+| `libUniTemplate` | `libUniFoo` | `libUniAccurate` |
+| `UniTemplate.h` | `UniFoo.h` | `UniAccurate.h` |
+| `lituus-unitemplate` | `lituus-unifoo` | `lituus-uniaccurate` |
+
+The C symbol prefix is the library's own name in lower case —
+`unitemplate_fibonacci`, so `unifoo_*`. Short prefixes read better and collide:
+a binary that links several engines at once holds them all in one namespace.
 
 Files to rename: `UniTemplate.nimble`, `src/UniTemplate.nim`, `src/UniTemplate/`,
 `include/UniTemplate.h`, `tests/c/test_unitemplate.c` (+ its Makefile target),
 `py/unitemplate/`. Then update `LICENSE`/`NOTICE` copyright and the ADR titles.
+
+The PyPI distribution is `lituus-<module>`; the import name stays `<module>`.
+Distribution and import are separate decisions, and the bare names are not all
+available.
 
 ## AI-assisted contributions
 
