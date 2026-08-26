@@ -11,14 +11,14 @@ on:
 permissions:
   contents: read
 
-# A newer push makes the previous run's answer irrelevant: cancel it rather
-# than pay for both.
 defaults:
   run:
     # bash on every runner, Windows included: one spelling for the gate call,
     # and `py/dist/*.whl` expands (pwsh would hand the pattern through as-is).
     shell: bash
 
+# A newer push makes the previous run's answer irrelevant: cancel it rather
+# than pay for both.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -296,6 +296,14 @@ jobs:
           echo "GATE=$GATE" >> "$GITHUB_ENV"
       - run: $GATE lint
       - run: $GATE checkVGraph
+      - name: Lint the workflows themselves
+        # Catches a break in release.yml or commitizen.yml. It cannot catch one
+        # in this file: GitHub refuses an unparseable workflow outright, with no
+        # job and no log to read -- which is why the same check is a pre-commit
+        # hook, where it runs before the push that would go dark.
+        uses: docker://rhysd/actionlint:1.7.7
+        with:
+          args: -color
 
   docs:
     name: Docs
@@ -425,7 +433,7 @@ jobs:
     steps:
       - name: Every required job must have succeeded
         run: |
-          results='${{ join(needs.*.result, " ") }}'
+          results='${{ join(needs.*.result, ' ') }}'
           echo "results: $results"
           for one in $results; do
             case "$one" in
