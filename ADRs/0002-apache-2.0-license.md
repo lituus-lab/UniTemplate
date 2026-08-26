@@ -12,5 +12,7 @@
 covered. The MIT→Apache relicense is unambiguous (each repo is author-single).
 Forks `NimContracts`/`nimsimd` keep MIT (upstream preserved).
 
-Every repo ships `LICENSE`, `NOTICE`, and `CONTRIBUTING.md` (DCO). Apache-2.0
-grants an explicit patent license; `NOTICE` records the bundled MIT dep.
+Every repo ships `LICENSE`, `NOTICE`, `CONTRIBUTING.md` (DCO) and
+`CODE_OF_CONDUCT.md`. Apache-2.0 grants an explicit patent license. `NOTICE`
+records the MIT dependency — recorded, not bundled: the contracts compile away
+under `-d:release`, so nothing of NimContracts reaches a shipped artifact.
