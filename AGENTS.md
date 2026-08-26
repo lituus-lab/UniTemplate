@@ -43,8 +43,10 @@ coverage on ubuntu; a canary job that must fail; `all-green` over all of them.
   so prose that outlives its API breaks the build. `py/notebooks/quickstart.ipynb`
   plays the same role for Python and renders natively on GitHub.
 - End covered sources with a blank line. Nim maps a trailing statement one line
-  past EOF; without that line lcov aborts on `range`/`unmapped`, and `nimble
-  coverage` deliberately suppresses no error so the failure stays visible.
+  past EOF; without that line lcov aborts on `range`/`unmapped`, and `coverage`
+  keeps those fatal so the failure stays visible. It ignores exactly one error,
+  `mismatch`, which lcov 2.0 raises on a NimContracts-generated destructor and
+  lcov 2.5 does not — a compiler-generated symbol, not a line of the library.
 
 ## Scope
 

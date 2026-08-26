@@ -11,6 +11,8 @@ srcDir        = "src"
 requires "nim >= 2.2.0"
 requires "https://github.com/lbartoletti/NimContracts#main"
 
+import std/strutils
+
 # --- Failure gate -----------------------------------------------------------
 # Nimble 0.22 exits 0 even when an `exec` inside a task failed: the exception
 # is printed, the task stops, and the process still reports success. Neither
@@ -25,7 +27,7 @@ requires "https://github.com/lbartoletti/NimContracts#main"
 # other platform here ships `python3`.
 const python = when defined(windows): "python" else: "python3"
 
-const CoverageMin = "90"
+const CoverageMin = 90.0
   ## Line coverage below this fails `coverage`. The template sits at 100 on one
   ## module; a real engine sets what its own suite can hold.
 
@@ -184,8 +186,14 @@ task coverage, "LCOV + HTML coverage report for the Nim sources (needs lcov)":
   # gcov and lcov driven directly, no coco. Linux and macOS only.
   # --debugger:native attributes lines to the .nim sources, not the generated C.
   # --include keeps stdlib out of the capture, where lcov 2.x aborts on Nim's
-  # codegen. Together they leave nothing to suppress: no --ignore-errors here,
-  # so a real problem still fails the build.
+  # codegen.
+  #
+  # One error is ignored, by name: `mismatch`, which lcov 2.0 raises on the
+  # end line of NimContracts' generated `eqdestroy_` for its Defect types
+  # (lcov 2.5 does not, so the runners disagree with a developer machine).
+  # It concerns a compiler-generated symbol, not a line of this library.
+  # `range` and `unmapped` stay fatal: those would mean the capture no longer
+  # matches the sources, which is the failure this task exists to surface.
   let cache = "build/covcache"
   rmDir cache
   rmDir "coverage"
@@ -194,10 +202,33 @@ task coverage, "LCOV + HTML coverage report for the Nim sources (needs lcov)":
        " -o:build/test_coverage tests/test_fibonacci.nim"
   exec "./build/test_coverage"
   exec "lcov --capture --directory " & cache & " --base-directory ." &
-       " --include \"*/src/UniTemplate/*\" --output-file lcov.info --quiet"
+       " --include \"*/src/UniTemplate/*\" --ignore-errors mismatch" &
+       " --output-file lcov.info --quiet"
   exec "genhtml lcov.info --output-directory coverage --legend --quiet"
   # A threshold, not a report: coverage that is measured and printed but never
   # opposable is a number nobody has to answer for. Raise it in a clone whose
   # suite earns it; lowering it is a decision, and shows up in the diff.
-  exec "lcov --summary lcov.info --fail-under-lines " & CoverageMin
+  #
+  # The summary is read rather than `--fail-under-lines` passed: that option is
+  # lcov 2.x only, and the runners are not pinned to a version.
+  let summary = gorgeEx("lcov --summary lcov.info 2>&1")
+  echo summary.output
+  if summary.exitCode != 0:
+    quit("coverage: lcov --summary failed", 1)
+  var rate = -1.0
+  for line in summary.output.splitLines:
+    let at = line.find("lines")
+    if at < 0 or not line.contains('%'): continue
+    let colon = line.find(':', at)
+    if colon < 0: continue
+    let percent = line.find('%', colon)
+    if percent < 0: continue
+    rate = parseFloat(line[colon + 1 ..< percent].strip)
+    break
+  if rate < 0:
+    quit("coverage: no line rate in lcov's summary", 1)
+  if rate < CoverageMin:
+    quit("coverage: " & $rate & "% of lines, below the " & $CoverageMin &
+         "% this repo requires", 1)
+  echo "coverage: " & $rate & "% of lines, at or above " & $CoverageMin & "%"
   done "coverage"
