@@ -25,6 +25,10 @@ requires "https://github.com/lbartoletti/NimContracts#main"
 # other platform here ships `python3`.
 const python = when defined(windows): "python" else: "python3"
 
+const CoverageMin = "90"
+  ## Line coverage below this fails `coverage`. The template sits at 100 on one
+  ## module; a real engine sets what its own suite can hold.
+
 const gateExe =
   when defined(windows): "build/unigate.exe" else: "build/unigate"
 
@@ -71,18 +75,22 @@ task docs, "API reference + book into pages/ — what CI publishes":
 
 task test, "Nim tests (debug, contracts active)":
   exec "nim c -r --path:src -o:build/test_fibonacci tests/test_fibonacci.nim"
+  exec "nim c -r --path:src -o:build/test_version tests/test_version.nim"
   done "test"
 
 task testRelease, "Nim tests (release, contracts compiled away)":
   exec "nim c -r -d:release --path:src -o:build/test_fibonacci_rel tests/test_fibonacci.nim"
+  exec "nim c -r -d:release --path:src -o:build/test_version_rel tests/test_version.nim"
   done "testRelease"
 
 task testCi, "Nim tests CI runs, debug — narrow this in a clone whose suite grows slow":
   exec "nim c -r --path:src -o:build/test_fibonacci tests/test_fibonacci.nim"
+  exec "nim c -r --path:src -o:build/test_version tests/test_version.nim"
   done "testCi"
 
 task testCiRelease, "Nim tests CI runs, release — narrow this in a clone whose suite grows slow":
   exec "nim c -r -d:release --path:src -o:build/test_fibonacci_rel tests/test_fibonacci.nim"
+  exec "nim c -r -d:release --path:src -o:build/test_version_rel tests/test_version.nim"
   done "testCiRelease"
 
 task testAll, "debug + release + C ABI":
@@ -188,5 +196,8 @@ task coverage, "LCOV + HTML coverage report for the Nim sources (needs lcov)":
   exec "lcov --capture --directory " & cache & " --base-directory ." &
        " --include \"*/src/UniTemplate/*\" --output-file lcov.info --quiet"
   exec "genhtml lcov.info --output-directory coverage --legend --quiet"
-  exec "lcov --summary lcov.info"
+  # A threshold, not a report: coverage that is measured and printed but never
+  # opposable is a number nobody has to answer for. Raise it in a clone whose
+  # suite earns it; lowering it is a decision, and shows up in the diff.
+  exec "lcov --summary lcov.info --fail-under-lines " & CoverageMin
   done "coverage"

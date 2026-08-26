@@ -5,7 +5,10 @@ requires = ["setuptools>=64", "wheel", "Cython>=3.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "unitemplate"
+# The distribution is namespaced, the import name is not: `pip install
+# lituus-unitemplate` then `import unitemplate`. Two decisions, and the bare
+# names are not all available on PyPI.
+name = "lituus-unitemplate"
 version = "0.1.0"
 description = "Python binding for the UniTemplate C library"
 readme = "README.md"

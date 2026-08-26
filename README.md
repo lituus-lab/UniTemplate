@@ -6,6 +6,11 @@ GitHub template repository for the `lituus-lab` `Uni*` libraries. Press **Use
 this template** and a new engine starts with the layout, the gates and the CI
 already in place. Hello-world: `fibonacci`, in Nim, C ABI, and Python.
 
+**Status: incubating.** The layout, the gates and the CI are in use across the
+family and are not expected to move much. The `0.x` C ABI is not frozen, and
+this repo is a starting point rather than a dependency: nothing should require
+it.
+
 ## Layout
 
 ```text
@@ -18,7 +23,12 @@ tests/c/                     C ABI test (links the header against the lib)
 examples/                    Nim + C demos
 py/                          Cython binding + pytest
 ADRs/                        0001 DAG, 0002 license, 0003 engine&shell, 0004 conventions
-.github/workflows/ci.yml     3-OS Nim matrix + C ABI + Python
+tools/gate.nim               the failure gate (see "Running a task")
+tools/lint.nim tools/vgraph.nim  nimpretty check, layer check
+tests/canary_broken.nim      does not compile, on purpose
+tests/test_version.nim       the version's six copies must agree
+.github/workflows/ci.yml     3-OS Nim matrix + C ABI + Python + all-green
+CHANGELOG.md CITATION.cff CODE_OF_CONDUCT.md .editorconfig
 ```
 
 ## Build

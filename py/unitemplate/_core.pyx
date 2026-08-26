@@ -4,6 +4,13 @@
 cdef extern from "UniTemplate.h":
     const char *unitemplate_version()
     long long unitemplate_fibonacci(int n)
+    # The domain bound comes from the header rather than being restated here:
+    # one copy fewer to drift, and the Python check enforces exactly what the
+    # C ABI clamps to.
+    int UNITEMPLATE_FIB_MAX_N
+
+
+FIB_MAX_N = UNITEMPLATE_FIB_MAX_N
 
 
 def fibonacci(int n):
