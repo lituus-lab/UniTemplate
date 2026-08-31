@@ -5,13 +5,12 @@
 ## Four chapters, because the standard asks a chapter for ten slots and a
 ## single page cannot show them separately. What a reader takes from this book
 ## is not fibonacci; it is the shape.
-import std/[base64, tables]
+import std/tables
 import nimibook
-
-const Favicon = staticRead("../../lituus-theme/brand/favicon/favicon.svg")
-  ## The lituus mark, thickened and on a filled disc so it carries its own
-  ## ground: the plain mark is a 2.1%-of-width stroke, a third of a pixel at
-  ## 16 px, and washes out.
+# `from ... import` and not a plain import: the theme module re-exports nimib
+# for the chapters, and nimib's NbConfig has a `favicon_escaped` field too, so
+# a plain import makes `book.favicon_escaped` below ambiguous.
+from lituus_theme import faviconTag
 
 var book = initBookWithToc:
   entry("UniTemplate", "index.nim")
@@ -28,9 +27,8 @@ book.default_theme = "lituus-light"
 book.preferred_dark_theme = "lituus-dark"
 book.theme_option = {"lituus-light": "Light", "lituus-dark": "Dark"}.toTable
 
-# Without this nimibook ships nimib's default, a whale emoji.
-book.favicon_escaped =
-  "<link rel=\"icon\" type=\"image/svg+xml\" href=\"data:image/svg+xml;base64," &
-  encode(Favicon) & "\">"
+# From the theme package, not from a path beside this checkout: CI checks out
+# one repository. Without it nimibook ships nimib's default, a whale emoji.
+book.favicon_escaped = faviconTag()
 
 nimibookCli(book)

@@ -23,7 +23,9 @@ requires "https://github.com/lbartoletti/NimContracts#main"
 const bookDeps = [
   "https://github.com/pietroppeter/nimib#v0.4.1",
   "https://github.com/pietroppeter/nimibook#v0.4.0",
-  "https://github.com/lituus-lab/lituus-theme",
+  # Pinned like the other two: three installs of one version is a resolution
+  # nimble cannot make, and it picks the wrong one in silence.
+  "https://github.com/lituus-lab/lituus-theme#v0.2.0",
 ]
 taskRequires "docsDeps", bookDeps[0], bookDeps[1], bookDeps[2]
 taskRequires "book", bookDeps[0], bookDeps[1], bookDeps[2]
