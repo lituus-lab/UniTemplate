@@ -7,7 +7,7 @@ const FibMaxN* = 92
   ## Largest n with fibonacci(n) fitting in int64 (fib(92) fits, fib(93) overflows).
 
 func fibonacci*(n: int): int {.contractual.} =
-  ## fibonacci(n) for n in [0, FibMaxN]. O(n) time, O(1) space.
+  ## fibonacci(n) for n in `0 .. FibMaxN`. O(n) time, O(1) space.
   ##
   ## .. code-block:: nim
   ##   doAssert fibonacci(10) == 55

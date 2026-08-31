@@ -1,24 +1,53 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 lituus-lab
-import nimib
+import lituus_theme
 
-nbInit
+nbInit(theme = useNimibook)
+useLituus()
 nb.title = "UniTemplate"
 
 nbText: """
 # UniTemplate
 
-The reference scaffold every `Uni*` engine is cloned from. It carries one
-hello-world function, `fibonacci`, exposed across the three surfaces each engine
-must ship: **Nim**, a **C ABI**, and a **Python** binding.
+The scaffold every `lituus-lab` `Uni*` engine starts from. Press **Use this
+template** on GitHub and a new engine begins with this layout, these gates and
+this CI already in place.
 
-This page is a nimib book: every Nim block below is compiled and run when the
-book is built, and the output shown is what the code actually produced. A change
-that breaks the API breaks the docs build, so the two cannot drift apart.
+It carries one hello-world function, `fibonacci`, exposed across the three
+surfaces every engine ships: **Nim**, a **C ABI**, and a **Python** binding.
+The function is not the point. The shape is: what a chapter contains, what is
+shown rather than asserted, and where each surface differs from the others.
 
-## The Nim surface
+**Read this front to back.** Each chapter uses what the one before it
+introduced, and the last two are about failure, which is where the three
+surfaces stop agreeing.
 
-The umbrella module re-exports every public submodule.
+## Installing
+
+```bash
+nimble install https://github.com/lituus-lab/UniTemplate    # Nim
+pip install lituus-unitemplate                              # Python
+```
+
+For C, the build produces `libUniTemplate.a` and `include/UniTemplate.h`:
+
+```bash
+build/unigate clibStatic
+cc -Iinclude your.c libUniTemplate.a
+```
+
+The PyPI distribution is `lituus-unitemplate`; the import name stays
+`unitemplate`. Those are two decisions, and the bare names are not all
+available.
+
+## What runs here
+
+Every Nim block on these pages is compiled and run when the book is built, and
+the output shown is what the code produced. A change that breaks the API breaks
+the docs build — so prose that outlived its API cannot ship.
+
+That guarantee covers `nbCode` blocks and nothing else. A fenced block written
+inside prose is a picture of code, not code.
 """
 
 nbCode:
@@ -26,78 +55,26 @@ nbCode:
 
   echo "version ", UniTemplateVersion
   echo "fib(10) = ", fibonacci(10)
-  echo "fib(92) = ", fibonacci(92)
+  echo "fib(", FibMaxN, ") = ", fibonacci(FibMaxN)
 
 nbText: """
-## The domain is part of the contract
+## Supported versions
 
-`fibonacci` is not defined for every `int`. `FibMaxN` is the largest argument
-whose result still fits in `int64`, and that bound is stated as a precondition
-rather than left to the caller to remember.
-"""
+Nim 2.2 or later, on Linux, macOS and Windows. CPython 3.10 to 3.14, on the
+same three. The `0.x` C ABI is not frozen.
 
-nbCode:
-  echo "FibMaxN = ", FibMaxN
-  echo "fib(FibMaxN) = ", fibonacci(FibMaxN)
+## Licence, and where to ask
 
-nbText: """
-The contract is written with NimContracts (`require:` / `ensure:` / `body:`).
-Under `-d:release` it compiles away entirely: the release build pays nothing,
-while debug builds and the test suite catch a violation at the call site.
+Apache-2.0. Contributions take a DCO sign-off; see `CONTRIBUTING.md`, and
+`CODE_OF_CONDUCT.md` for conduct. Questions and defects go to the repository's
+issue tracker.
 
-A postcondition never re-derives the result by calling the function again — it
-states a property cheaper to check than the body is to run. Here, `result >= 0`.
+## What this book does not cover
 
-## The C ABI
-
-The same function, reachable from anything that speaks C. The header is
-hand-written and kept in sync with `src/UniTemplate/c_api.nim`; `tests/c` links
-one against the other on every CI run, so a drift is caught rather than shipped.
-
-```c
-#define UNITEMPLATE_FIB_MAX_N 92
-
-const char *unitemplate_version(void);
-long long   unitemplate_fibonacci(int n);
-```
-
-The C ABI **never raises**. Where the Nim function has a precondition, the C
-entry point clamps instead: out-of-range input returns a defined value rather
-than unwinding across the ABI boundary, which would be undefined behaviour.
-
-```c
-unitemplate_fibonacci(-5);   /* 0       — clamped, not a trap */
-unitemplate_fibonacci(200);  /* fib(92) — clamped to the domain */
-```
-
-## The Python surface
-
-A Cython extension over the C ABI, shipped as a self-contained wheel: the
-library travels inside the package, so installing it needs neither Nim nor a
-compiler.
-
-```python
-import unitemplate
-
-unitemplate.fibonacci(10)   # 55
-unitemplate.version()       # '0.1.0'
-```
-
-Here the domain check returns, because Python has exceptions to carry it:
-`fibonacci(-1)` and `fibonacci(93)` raise `ValueError`, a non-`int` argument
-raises `TypeError`. Each surface expresses one contract in the terms its own
-callers expect — a precondition in Nim, a clamp in C, an exception in Python.
-
-`py/notebooks/quickstart.ipynb` runs these calls against an installed wheel and
-renders on GitHub directly.
-
-## Starting an engine from this
-
-Press **Use this template** on GitHub, then rename the tokens — `UniTemplate` →
-`UniFoo`, `unitemplate` → `unifoo`, and the C prefix with them, since it is the
-library's own name in lower case. Replace `fibonacci.nim` with the domain
-modules, and rewrite this book for the domain: the generated reference lists the
-API, the book is where the domain gets explained.
+The build gates (`build/unigate`, the canary, `all-green`), which are in
+`README.md`; the layer check in `vgraph.cfg`; and the release workflow. Those
+are about the repository rather than the library, and a reader cloning the
+template meets them in the README first.
 """
 
 nbSave

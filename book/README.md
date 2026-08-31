@@ -2,10 +2,40 @@
 <!-- Copyright 2026 lituus-lab -->
 # The Book
 
-`index.nim` is the nimib book every `Uni*` library carries. Its code blocks are
+A nimibook table of contents, one chapter per file. Every code block is
 compiled and run when the book is built, so prose that outlives its API breaks
 the build rather than quietly misleading a reader.
 
-Build it with `build/unigate book`, or `build/unigate docs` for the book plus
-the generated API reference. A library whose book grows past one page splits it
-into a nimibook table of contents; a one-page book stays here.
+| File | What it is |
+|---|---|
+| `nbook.nim` | the table of contents and the theme selection — the driver |
+| `nimib.toml` | nimib's own configuration, read from this directory |
+| `config.nims` | the paths each chapter's own compilation needs |
+| `index.nim` | the opening chapter |
+| `fibonacci.nim`, `contracts.nim`, `surfaces.nim` | the chapters |
+
+## Building it
+
+```bash
+build/unigate book     # the book alone
+build/unigate docs     # book + generated API reference, into pages/
+```
+
+Through the gate, never `nimble book` directly: nimble exits 0 even when an
+`exec` inside a task fails, so a green run that went through it proves nothing.
+
+## Adding a chapter
+
+Add the entry to `nbook.nim`'s table of contents, then:
+
+```bash
+nimble bookInit        # scaffolds the missing source
+```
+
+It is a separate task on purpose — `book` must not rewrite scaffolding on
+every run.
+
+Each chapter calls `nbInit(theme = useNimibook)` itself and then `useLituus()`.
+`nbInit` cannot be wrapped: it reads `instantiationInfo(-1)` to learn which
+file it is documenting, so a template calling it from another module makes
+every chapter claim to be that module, and nimibook then writes no HTML at all.
