@@ -96,6 +96,12 @@ task bookInit, "Scaffold a chapter added to the table of contents":
   done "bookInit"
 
 task book, "Build the multi-chapter book (needs nimib + nimibook)":
+  # The surfaces chapter compiles the C header against the static library and
+  # imports the Python extension. Neither exists in a fresh clone, and a
+  # chapter whose command fails now stops the book rather than publishing the
+  # failure as its output -- so the book builds what it is going to run.
+  exec gate("clibStatic")
+  exec gate("buildCython")
   # Run from book/, because nimibook reads the nimib.toml of the directory it
   # starts in -- run from the root, `init` writes a second one there that masks
   # the book's own. Each chapter is compiled and run as its own program, so a
@@ -103,6 +109,12 @@ task book, "Build the multi-chapter book (needs nimib + nimibook)":
   # processes their paths.
   withDir "book":
     exec "nim c -r --hints:off -o:../build/nbook nbook.nim clean"
+    # `init` before `build`, on every run: it is what creates `__site/assets`,
+    # which is not tracked, so a fresh clone has none and every page ships
+    # referencing a stylesheet and a script that are not there. It only ever
+    # creates what is missing -- an existing chapter is left alone -- so this
+    # is not the scaffolding rewrite `bookInit` exists to keep out of `book`.
+    exec "nim c -r --hints:off -o:../build/nbook nbook.nim init"
     exec "nim c -r --hints:off -o:../build/nbook nbook.nim build"
   done "book"
 
@@ -191,7 +203,6 @@ let makeExe = if findExe("mingw32-make").len > 0: "mingw32-make" else: "make"
 task ctest, "C ABI tests":
   exec gate("clibStatic")
   exec makeExe & " -C tests/c"
-  done "clibMsvc"
   done "ctest"
 
 task cexample, "C demo":
@@ -209,7 +220,6 @@ task pyLib, "Build the library the Python extension links against":
     exec gate("clibMsvc")
   else:
     exec gate("clib")
-  done "pyDeps"
   done "pyLib"
 
 task buildCython, "Cython extension in-place":
