@@ -12,9 +12,15 @@ const Root = currentSourcePath().parentDir.parentDir
 proc run(command: string): string =
   ## Run a command from the repository root and return its output. Used so the
   ## C and Python results on this page are produced rather than transcribed.
+  ##
+  ## A non-zero exit stops the book. Returning the failure as text instead
+  ## would publish a page whose "output" is a traceback, from a build that
+  ## reported success -- which is exactly what happened before this raised.
   let (output, code) = execCmdEx("cd " & Root.quoteShell & " && " & command)
   result = output.strip
-  if result.len == 0: result = "(no output, exit " & $code & ")"
+  if code != 0:
+    raise newException(OSError,
+      "book: `" & command & "` exited " & $code & "\n" & result)
 
 nbText: """
 # Surfaces
