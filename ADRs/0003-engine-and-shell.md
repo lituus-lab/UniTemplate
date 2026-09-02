@@ -18,8 +18,12 @@
   not used.)
 - `--mm:arc`: deterministic memory model for foreign callers (no cycle
   collector). `--noMain`: Nim emits no `main()`, so nothing calls `NimMain()`
-  on its own — a shared library still gets one from DllMain or an ELF
-  constructor, a static one gets nothing at all. That is why every entry point
-  in `c_api.nim` opens with `ensureRuntime()`, and why the static builds pass
-  `-d:staticNoAutoInit` while the shared ones must not.
+  on its own — and no build gets one for free. The shared library was long
+  assumed to be covered by a DllMain or an ELF constructor; it is not, and the
+  registries of every library that believed it stayed empty until a caller ran
+  the initializer by hand. Every entry point in `c_api.nim` opens with
+  `ensureRuntime()`, and every `--noMain` build — static, shared and wasm
+  alike — passes `-d:noAutoInit` so that call is the once primitive rather
+  than a no-op. Only an ordinary executable linking the module leaves it out,
+  its own `main` having already run `NimMain`.
 - **Python binding**: Cython over the shared lib, RPATH `$ORIGIN`.
